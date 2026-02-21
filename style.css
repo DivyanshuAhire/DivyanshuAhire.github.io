@@ -1,0 +1,53 @@
+body {
+    background : grey;
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.Calc {
+    
+    background: rgb(70, 69, 69);
+    padding: 20px;
+    
+}
+
+.Calc h1 {
+    text-align: center;
+    color: azure;
+    padding: 0%;
+    margin: 10px;
+}
+.Calc h4 {
+    margin-top: 0px;
+    margin-bottom: 20px;
+    padding: 0%;
+    text-align: center;
+    color: azure;
+}
+
+
+
+input {
+    padding: 4px;
+    margin: 4px;
+
+}
+
+.Operators button {
+    margin: 4px;
+    cursor: pointer;
+    width: 85px;
+
+
+    
+}
+
+.Calc h2 {
+    background: rgb(156, 209, 132);
+    padding: 10px;
+    width: 360px;
+}
+
+
+
