@@ -1,53 +1,105 @@
 body {
-    background : grey;
+
+    
+    background-color: black;
+    
+
+    h1 {
+        
+        display: flex;
+        flex-wrap: nowrap;
+        color: aliceblue;
+        margin-left: 20px;
+        margin-right: 20px;
+        font-family: 'Times New Roman', Times, serif;
+        
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        
+
+        select {
+            margin: 40px;
+            color: aliceblue;
+            border: 0cap;
+            background-color: black;
+            font-family:'Times New Roman', Times, serif;
+            font-size: 15px;
+
+
+            option {
+               background-color: beige;
+               color: black;
+            }
+
+
+           
+
+        }
+        button {
+            background-color: black;
+            border-radius: 20px;
+            color: aliceblue;
+            margin: 20px;
+            border-width: 0px;
+            border-radius: 10px;
+            border-style: solid;
+            border-color: white;
+            background-color: rgb(29, 29, 29);
+            height: 30px;
+            
+           }
+
+        
+        
+    }
+
+    
+}
+
+body .mid {
+    background-color: rgb(51, 51, 51);
+    
+    height: 500px;
+    margin-left: 30px;
+    margin-right: 30px;
+    border-radius: 20px;
+
+    display: flex;
+    flex-wrap: wrap;
+    
+    align-items: center;
+    justify-content: center;
+
+    h1 {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 60px;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    h2 {
+        align-items: center;
+        margin-top: 0;
+        padding-top: 0;
+        align-items: center;
+        color: aliceblue;
+    }
+
+}
+
+
+body .lowerMid {
+
+     margin-left: 30px;
+    margin-right: 30px;
+    border-radius: 20px;
+
+    background-color: rgb(51, 51, 51) ;
+    margin-top: 50px;
     display: flex;
     justify-content: center;
-    margin-top: 50px;
+    align-items: center;
+    color: aliceblue;
 }
-
-.Calc {
-    
-    background: rgb(70, 69, 69);
-    padding: 20px;
-    
-}
-
-.Calc h1 {
-    text-align: center;
-    color: azure;
-    padding: 0%;
-    margin: 10px;
-}
-.Calc h4 {
-    margin-top: 0px;
-    margin-bottom: 20px;
-    padding: 0%;
-    text-align: center;
-    color: azure;
-}
-
-
-
-input {
-    padding: 4px;
-    margin: 4px;
-
-}
-
-.Operators button {
-    margin: 4px;
-    cursor: pointer;
-    width: 85px;
-
-
-    
-}
-
-.Calc h2 {
-    background: rgb(156, 209, 132);
-    padding: 10px;
-    width: 360px;
-}
-
-
-
