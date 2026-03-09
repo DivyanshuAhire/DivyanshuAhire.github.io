@@ -1,79 +1,71 @@
 <!DOCTYPE html>
 <html>
-
-
-
 <head>
-  <title>Vercel Clone</title>
-  <link rel="styleSheet" href="style.css">
+<meta charset="UTF-8">
+<title>RentalPay</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
-
-
 <body>
-  <div class="header">
-    <h1> VercelClone</h1>
 
-      <select>
-      <option>Products</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-    </select>
-    
-    <select> 
-      <option>Resources</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-    </select>
+<header>
 
-  
+<div class="logo">
+RentalPay
+</div>
 
-    <select>
-      <option>Solutions</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-      <option>1</option>
-    </select>
+<div class="search-section">
 
+<input id="search" placeholder="Search outfits">
 
+<select id="locationFilter">
+<option value="">All Cities</option>
+<option>Mumbai</option>
+<option>Pune</option>
+<option>Delhi</option>
+<option>Bangalore</option>
+</select>
 
-    
-      <button class="first">Log In</button>
-      <button>Sign Up</button>
-    
-    
-  </div>
+<select id="sortPrice">
+<option value="">Sort</option>
+<option value="low">Price Low → High</option>
+<option value="high">Price High → Low</option>
+</select>
 
+</div>
 
-  <div class="mid">
+<div class="auth-buttons">
 
-      <h1>Build and deploy on the AI Cloud.</h1>
-      <h2>Vercel provides the developer tools and cloud infrastructure to build, scale, and secure a faster, more personalized web
-      </h2>
+<button onclick="openLogin()">Login</button>
+<button onclick="openSignup()">Signup</button>
 
+</div>
 
-  </div>
+</header>
 
+<section id="catalog"></section>
 
-  <div class="lowerMid">
-    <h2>Develop with your favorite tools 
-  Launch globally, instantly  Keep pushing </h2>
-  </div>
+<!-- LOGIN MODAL -->
 
+<div id="authModal" class="modal">
 
- 
+<div class="modal-box">
 
+<h2 id="authTitle">Login</h2>
 
+<input id="username" placeholder="Username">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
+<button onclick="submitAuth()">Submit</button>
+
+<p id="switch"></p>
+
+</div>
+
+</div>
+
+<script src="script.js"></script>
 
 </body>
-
-
-
-
 </html>
