@@ -7,11 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
-
-const libraries: "places"[] = ["places"];
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
 
 export default function AddListing() {
   const { user } = useAuth();
@@ -27,22 +25,28 @@ export default function AddListing() {
   const [address, setAddress] = useState("");
   const [lat, setLat] = useState(0);
   const [lng, setLng] = useState(0);
-  const [autocompleteRef, setAutocompleteRef] = useState<google.maps.places.Autocomplete | null>(null);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
-
-  const onPlaceChanged = () => {
-    if (autocompleteRef !== null) {
-      const place = autocompleteRef.getPlace();
-      if (place.geometry?.location) {
-        setAddress(place.formatted_address || place.name || "");
-        setLat(place.geometry.location.lat());
-        setLng(place.geometry.location.lng());
-      }
+  const searchLocation = async (query: string) => {
+    if (query.length < 3) return;
+    setSearching(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error("OSM Search failed", err);
+    } finally {
+      setSearching(false);
     }
+  };
+
+  const selectLocation = (result: any) => {
+    setAddress(result.display_name);
+    setLat(parseFloat(result.lat));
+    setLng(parseFloat(result.lon));
+    setSearchResults([]);
   };
   
   const [images, setImages] = useState<File[]>([]);
@@ -183,18 +187,39 @@ export default function AddListing() {
                </div>
             </div>
 
-            <div className="space-y-2">
-               <Label className="font-semibold text-gray-700">Pickup Location</Label>
-               {isLoaded ? (
-                 <Autocomplete
-                   onLoad={(ref) => setAutocompleteRef(ref)}
-                   onPlaceChanged={onPlaceChanged}
-                 >
-                   <Input placeholder="Search for your street or city..." value={address} onChange={(e)=>setAddress(e.target.value)} required className="h-12 bg-gray-50 border-gray-200" />
-                 </Autocomplete>
-               ) : (
-                 <Input placeholder="Loading map services..." disabled className="h-12 bg-gray-50 border-gray-200" />
+            <div className="space-y-2 relative">
+               <Label className="font-semibold text-gray-700">Pickup Location (OpenStreetMap Search)</Label>
+               <div className="relative">
+                  <Input 
+                    placeholder="Type your street, area or city..." 
+                    value={address} 
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      searchLocation(e.target.value);
+                    }} 
+                    required 
+                    className="h-12 bg-gray-50 border-gray-200 pr-10" 
+                  />
+                  <div className="absolute right-3 top-3.5 text-gray-400">
+                    <Search className={`w-5 h-5 ${searching ? 'animate-pulse' : ''}`} />
+                  </div>
+               </div>
+               
+               {searchResults.length > 0 && (
+                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-100 shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+                    {searchResults.map((result) => (
+                      <div 
+                        key={result.place_id} 
+                        onClick={() => selectLocation(result)}
+                        className="p-3 hover:bg-indigo-50 cursor-pointer text-sm border-b border-gray-50 transition-colors last:border-0"
+                      >
+                         <p className="font-bold text-gray-900">{result.display_name.split(',')[0]}</p>
+                         <p className="text-gray-500 truncate text-xs">{result.display_name}</p>
+                      </div>
+                    ))}
+                 </div>
                )}
+               <p className="text-[10px] text-gray-400 mt-1">Free Geolocation via OpenStreetMap Nominatim</p>
             </div>
 
             <div className="space-y-2">

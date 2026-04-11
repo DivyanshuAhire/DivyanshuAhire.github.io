@@ -8,7 +8,11 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { GoogleMap, useJsApiLoader, Circle } from "@react-google-maps/api";
+import dynamic from "next/dynamic";
+
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
+const Circle = dynamic(() => import("react-leaflet").then((mod) => mod.Circle), { ssr: false });
 
 export default function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -23,9 +27,7 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
   const [bookingLoading, setBookingLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-  });
+
   
   useEffect(() => {
     const script = document.createElement("script");
@@ -176,26 +178,26 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
              {listing.location && listing.location.lat && (
              <div className="py-4">
                 <h3 className="font-bold text-gray-900 mb-4 text-lg">Location Area (10km Pickup Radius)</h3>
-                {!isLoaded ? (
-                   <div className="h-64 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-500 font-semibold shadow-inner border border-gray-100">Loading map services...</div>
-                ) : (
-                   <div className="h-64 rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-                     <GoogleMap
-                        mapContainerStyle={{ width: '100%', height: '100%' }}
-                        center={{ lat: listing.location.lat, lng: listing.location.lng }}
+                <div className="h-64 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-500 font-semibold shadow-inner border border-gray-100">Map is loading...</div>
+                   <div className="h-64 rounded-3xl overflow-hidden shadow-sm border border-gray-100 relative z-0">
+                     <MapContainer
+                        center={[listing.location.lat, listing.location.lng]}
                         zoom={11}
-                        options={{ disableDefaultUI: true, gestureHandling: "cooperative" }}
+                        scrollWheelZoom={false}
+                        style={{ width: '100%', height: '100%' }}
                      >
-                        <Circle
-                           center={{ lat: listing.location.lat, lng: listing.location.lng }}
-                           radius={10000}
-                           options={{ fillColor: "#4f46e5", fillOpacity: 0.15, strokeColor: "#4f46e5", strokeOpacity: 0.8, strokeWeight: 2 }}
+                        <TileLayer
+                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                     </GoogleMap>
+                        <Circle
+                           center={[listing.location.lat, listing.location.lng]}
+                           pathOptions={{ fillColor: '#4f46e5', fillOpacity: 0.15, color: '#4f46e5' }}
+                           radius={5000}
+                        />
+                     </MapContainer>
                    </div>
-                )}
-             </div>
-             )}
+                </div>
+              )}
 
              <div className="pb-4">
                 <h3 className="font-bold text-gray-900 mb-2 text-lg">Owner Details</h3>
