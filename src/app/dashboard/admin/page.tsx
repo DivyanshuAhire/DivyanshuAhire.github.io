@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [profits, setProfits] = useState(0);
   const [usersList, setUsersList] = useState([]);
   const [ordersList, setOrdersList] = useState([]);
+  const [listingsList, setListingsList] = useState([]);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
@@ -21,25 +22,29 @@ export default function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      const [profitRes, usersRes, ordersRes] = await Promise.all([
+      const [profitRes, usersRes, ordersRes, listingsRes] = await Promise.all([
          fetch("/api/admin/profits"),
          fetch("/api/admin/users"),
-         fetch("/api/admin/orders")
+         fetch("/api/admin/orders"),
+         fetch("/api/listings")
       ]);
       if (profitRes.ok) setProfits((await profitRes.json()).totalProfits);
       if (usersRes.ok) setUsersList(await usersRes.json());
       if (ordersRes.ok) setOrdersList(await ordersRes.json());
+      if (listingsRes.ok) setListingsList(await listingsRes.json());
     } finally {
       setFetching(false);
     }
   };
 
   const handleDeleteListing = async (listingId: string) => {
-    if(confirm("Are you sure you want to delete this listing?")) {
-      const res = await fetch(`/api/admin/listing/${listingId}`, { method: "DELETE"});
+    if(confirm("Are you sure you want to delete this listing permanently from the platform?")) {
+      const res = await fetch(`/api/listings/${listingId}`, { method: "DELETE"});
       if(res.ok) {
-         toast.success("Listing deleted successfully");
+         toast.success("Listing removed from platform");
          fetchAdminData();
+      } else {
+         toast.error("Failed to delete listing");
       }
     }
   }
@@ -125,6 +130,31 @@ export default function AdminDashboard() {
                    </div>
                 ))}
              </div>
+          </div>
+       </div>
+ 
+       {/* Platform Listings Moderation */}
+       <div className="space-y-6">
+          <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-500 px-2">Global Listing Moderation ({listingsList.length})</h2>
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-8">
+             {listingsList.length === 0 ? (
+                <div className="text-center py-10 text-gray-400 font-medium">No active listings found.</div>
+             ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                   {listingsList.map((item: any) => (
+                      <div key={item._id} className="group relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all">
+                         <div className="h-32 bg-gray-200">
+                            {item.images?.[0] && <img src={item.images[0]} className="w-full h-full object-cover" alt="" />}
+                         </div>
+                         <div className="p-4">
+                            <h3 className="font-bold text-gray-900 truncate mb-1">{item.title}</h3>
+                            <div className="text-xs text-gray-500 mb-3">Owner: {item.ownerId?.email}</div>
+                            <Button onClick={() => handleDeleteListing(item._id)} variant="destructive" className="w-full h-9 text-[10px] font-black uppercase tracking-widest rounded-xl">Delete Listing</Button>
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             )}
           </div>
        </div>
     </div>

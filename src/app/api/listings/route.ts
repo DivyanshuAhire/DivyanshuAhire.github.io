@@ -8,10 +8,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const size = searchParams.get("size");
+    const ownerId = searchParams.get("ownerId");
 
     let query: any = {};
     if (category && category !== "All") query.category = category;
     if (size && size !== "All") query.size = size;
+    if (ownerId) query.ownerId = ownerId;
 
     const listings = await Listing.find(query).populate("ownerId", "name email");
     return NextResponse.json(listings, { status: 200 });

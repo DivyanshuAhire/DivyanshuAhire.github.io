@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import { Listing } from "@/models/Listing";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey123";
+
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -30,8 +34,31 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     await dbConnect();
     const resolvedParams = await params;
+    
+    // Auth check
+    const token = (req as any).cookies?.get("auth-token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    let userId: string;
+    let userRole: string;
+    try {
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
+      userId = payload.id as string;
+      userRole = payload.role as string;
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const listing = await Listing.findById(resolvedParams.id);
+    if (!listing) return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+
+    // Verify ownership or admin role
+    if (listing.ownerId.toString() !== userId && userRole !== "ADMIN") {
+      return NextResponse.json({ error: "You don't have permission to delete this listing" }, { status: 403 });
+    }
+
     await Listing.findByIdAndDelete(resolvedParams.id);
-    return NextResponse.json({ message: "Listing deleted" }, { status: 200 });
+    return NextResponse.json({ message: "Listing deleted successfully" }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

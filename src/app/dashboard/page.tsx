@@ -9,11 +9,13 @@ import { toast } from "sonner";
 export default function UnifiedDashboard() {
   const { user, loading } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [myListings, setMyListings] = useState([]);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     if (user && user.role === "USER") {
       fetchOrders();
+      fetchUserListings();
     } else if (!loading) {
       setFetching(false);
     }
@@ -29,6 +31,25 @@ export default function UnifiedDashboard() {
       setFetching(false);
     }
   };
+
+  const fetchUserListings = async () => {
+    try {
+      const res = await fetch(`/api/listings?ownerId=${user?.id}`);
+      if (res.ok) setMyListings(await res.json());
+    } catch (err) {}
+  };
+
+  const handleDeleteListing = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this listing permanently?")) return;
+    const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Listing deleted");
+      fetchUserListings();
+    } else {
+      toast.error("Failed to delete listing");
+    }
+  };
+
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     const res = await fetch(`/api/orders/${orderId}`, {
@@ -64,7 +85,7 @@ export default function UnifiedDashboard() {
          </Link>
          <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl"></div>
        </div>
-
+ 
        {/* SECTION: PUBLISHING HUB (Incoming Requests) */}
        <div>
           <h2 className="text-2xl font-black text-gray-900 mb-6 border-l-4 border-indigo-600 pl-4">Incoming Booking Requests (Sales)</h2>
@@ -98,7 +119,7 @@ export default function UnifiedDashboard() {
                          Delivery: {order.deliveryType}
                       </div>
                    </div>
-
+ 
                    <div className="mt-auto">
                       <div className="flex flex-wrap gap-3 items-center justify-between bg-white pt-4 border-t border-gray-50">
                          <div className="flex gap-2">
@@ -121,7 +142,9 @@ export default function UnifiedDashboard() {
           </div>
           )}
        </div>
-
+ 
+       <ListingsSection listings={myListings} onDelete={handleDeleteListing} />
+ 
        {/* SECTION: RENTING HUB (Purchases) */}
        <div>
           <h2 className="text-2xl font-black text-gray-900 mb-6 border-l-4 border-purple-600 pl-4 mt-8">My Rented Clothes (Purchases)</h2>
@@ -170,3 +193,39 @@ export default function UnifiedDashboard() {
     </div>
   );
 }
+
+function ListingsSection({ listings, onDelete }: { listings: any[], onDelete: (id: string) => void }) {
+  return (
+    <div>
+       <h2 className="text-2xl font-black text-gray-900 mb-6 border-l-4 border-green-600 pl-4 mt-8">My Listings (Active Items)</h2>
+       {listings.length === 0 ? (
+       <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm">
+          <div className="text-gray-500 font-medium">You haven't posted any items for rent.</div>
+       </div>
+       ) : (
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {listings.map((item: any) => (
+             <Card key={item._id} className="overflow-hidden bg-white border border-gray-100 hover:shadow-md transition-shadow shadow-sm rounded-3xl p-5 flex flex-col">
+                <div className="h-40 bg-gray-50 rounded-2xl overflow-hidden mb-4 relative">
+                   {item.images?.[0] ? (
+                     <img src={item.images[0]} alt="img" className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
+                   )}
+                   <div className="absolute top-2 right-2 px-2 py-1 bg-white/80 backdrop-blur-sm rounded-lg text-[10px] font-black">{item.category}</div>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1 truncate">{item.title}</h3>
+                <div className="text-lg font-black text-indigo-600 mb-4">₹{item.pricePerDay}<span className="text-[10px] text-gray-400 font-bold">/day</span></div>
+                
+                <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
+                   <Link href={`/listings/${item._id}`} className="text-xs font-bold text-gray-400 hover:text-indigo-600 transition-colors">View Page</Link>
+                   <Button onClick={() => onDelete(item._id)} variant="destructive" className="h-9 px-4 text-xs font-bold rounded-xl shadow-sm">Delete</Button>
+                </div>
+             </Card>
+          ))}
+       </div>
+       )}
+    </div>
+  );
+}
+
