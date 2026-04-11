@@ -13,6 +13,14 @@ export default function Home() {
     fetchListings();
   }, [category, size]);
 
+  const handleCategoryChange = (value: string | null) => {
+    if (value !== null) setCategory(value);
+  };
+
+  const handleSizeChange = (value: string | null) => {
+    if (value !== null) setSize(value);
+  };
+
   const fetchListings = async () => {
     let url = "/api/listings?";
     if (category !== "All") url += `category=${category}&`;
@@ -30,7 +38,7 @@ export default function Home() {
           <div className="space-y-5">
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-2 block">Category</label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
@@ -45,7 +53,7 @@ export default function Home() {
             </div>
             <div>
               <label className="text-sm font-semibold text-gray-700 mb-2 block">Size</label>
-              <Select value={size} onValueChange={setSize}>
+              <Select value={size} onValueChange={handleSizeChange}>
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue placeholder="All Sizes" />
                 </SelectTrigger>
