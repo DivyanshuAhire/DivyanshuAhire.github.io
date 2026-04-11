@@ -1,0 +1,132 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+export default function AdminDashboard() {
+  const { user, loading } = useAuth();
+  const [profits, setProfits] = useState(0);
+  const [usersList, setUsersList] = useState([]);
+  const [ordersList, setOrdersList] = useState([]);
+  const [fetching, setFetching] = useState(true);
+
+  useEffect(() => {
+    if (user && user.role === "ADMIN") {
+      fetchAdminData();
+    } else if (!loading) {
+      setFetching(false);
+    }
+  }, [user, loading]);
+
+  const fetchAdminData = async () => {
+    try {
+      const [profitRes, usersRes, ordersRes] = await Promise.all([
+         fetch("/api/admin/profits"),
+         fetch("/api/admin/users"),
+         fetch("/api/admin/orders")
+      ]);
+      if (profitRes.ok) setProfits((await profitRes.json()).totalProfits);
+      if (usersRes.ok) setUsersList(await usersRes.json());
+      if (ordersRes.ok) setOrdersList(await ordersRes.json());
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleDeleteListing = async (listingId: string) => {
+    if(confirm("Are you sure you want to delete this listing?")) {
+      const res = await fetch(`/api/admin/listing/${listingId}`, { method: "DELETE"});
+      if(res.ok) {
+         toast.success("Listing deleted successfully");
+         fetchAdminData();
+      }
+    }
+  }
+
+  if (loading || fetching) return <div className="text-center py-32 text-gray-500 font-medium text-lg">Loading Admin Panel...</div>;
+  if (!user || user.role !== "ADMIN") return <div className="text-center py-32 font-bold text-red-500 text-xl">Access Denied. Ensure your account role is set to ADMIN.</div>;
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-12 pb-10">
+       <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black p-10 md:p-14 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div>
+               <h1 className="text-4xl md:text-5xl font-black mb-3 tracking-tight">Admin Overview</h1>
+               <p className="text-gray-400 font-medium tracking-wide text-lg">Monitor platform activity, users, and overall revenue.</p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-lg w-full md:w-auto text-center md:text-left text-white/90">
+               <div className="text-sm font-black uppercase tracking-[0.2em] mb-2 opacity-70">Total Platform Profits</div>
+               <div className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-green-300 to-emerald-500 drop-shadow-sm">₹{profits}</div>
+               <div className="text-xs font-semibold mt-3 text-gray-300 bg-black/20 inline-block px-3 py-1 rounded-md">From 15% Platform Commission Fee</div>
+            </div>
+         </div>
+         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500 opacity-[0.15] rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+         <div className="absolute bottom-0 left-0 w-80 h-80 bg-rose-500 opacity-[0.10] rounded-full blur-[80px] -translate-x-1/4 translate-y-1/4 pointer-events-none"></div>
+       </div>
+
+       <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+          {/* Users List */}
+          <div className="space-y-6">
+             <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-500 px-2">Registered Users ({usersList.length})</h2>
+             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 max-h-[700px] overflow-y-auto space-y-4">
+                {usersList.length === 0 && <div className="text-gray-400 text-center py-10 font-medium">No users found.</div>}
+                {usersList.map((u: any) => (
+                   <div key={u._id} className="flex justify-between items-center p-5 bg-gray-50 hover:bg-gray-100/50 transition-colors rounded-2xl border border-gray-100">
+                      <div>
+                         <div className="font-bold text-gray-900 text-lg mb-1">{u.name}</div>
+                         <div className="text-gray-500 text-sm">{u.email}</div>
+                      </div>
+                      <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs font-black tracking-widest rounded-xl">
+                         {u.role}
+                      </div>
+                   </div>
+                ))}
+             </div>
+          </div>
+
+          {/* Orders / Listings */}
+          <div className="space-y-6">
+             <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-500 px-2">Transactions & Moderation</h2>
+             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden p-6 max-h-[700px] overflow-y-auto space-y-5">
+                {ordersList.length === 0 && <div className="text-gray-400 text-center py-10 font-medium">No transactions available.</div>}
+                {ordersList.map((o: any) => (
+                   <div key={o._id} className="p-6 bg-gray-50 hover:bg-gray-100/50 transition-colors rounded-2xl border border-gray-100">
+                      <div className="flex justify-between items-start mb-4 gap-4">
+                         <div className="font-black text-gray-900 text-xl leading-tight line-clamp-2 pb-1">{o.listingId?.title || "Listing Removed"}</div>
+                         <div className="text-2xl font-black text-gray-900 whitespace-nowrap">₹{o.totalPrice}</div>
+                      </div>
+                      
+                      <div className="bg-white rounded-xl p-4 border border-gray-100 mb-5">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                            <div><span className="font-bold text-gray-400 uppercase text-xs tracking-wider block mb-1">Owner</span> <span className="font-medium text-gray-900">{o.ownerId?.email}</span></div>
+                            <div><span className="font-bold text-gray-400 uppercase text-xs tracking-wider block mb-1">Renter</span> <span className="font-medium text-gray-900">{o.renterId?.email}</span></div>
+                         </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                         <div className="flex gap-2">
+                            <span className={`px-3 py-1.5 text-xs font-black rounded-lg border uppercase tracking-wider ${o.paymentStatus === 'Paid' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>Pay: {o.paymentStatus}</span>
+                            <span className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-black uppercase tracking-wider rounded-lg">{o.status}</span>
+                         </div>
+                         <div className="text-xs font-black text-gray-500 bg-gray-100 px-4 py-1.5 rounded-lg border border-gray-200 uppercase tracking-widest">
+                            Platform Fee: <span className="text-green-600 text-sm">₹{o.platformFee}</span>
+                         </div>
+                      </div>
+                      
+                      {o.listingId && (
+                      <div className="mt-5 pt-5 border-t border-gray-200 flex justify-end">
+                         <Button variant="destructive" className="h-10 px-6 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-xs" onClick={() => handleDeleteListing(o.listingId._id)}>
+                             Delete Listing from Platform
+                         </Button>
+                      </div>
+                      )}
+                   </div>
+                ))}
+             </div>
+          </div>
+       </div>
+    </div>
+  );
+}
