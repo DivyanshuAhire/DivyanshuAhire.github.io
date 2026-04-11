@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     // Amount in paise (multiply by 100)
     const amountInPaise = Math.round(order.totalPrice * 100);
-    const ownerEarningInPaise = Math.round(order.ownerEarning * 100);
+    const ownerEarningInPaise = Math.round((order.ownerEarning + order.securityDeposit) * 100);
 
     const options = {
       amount: amountInPaise,

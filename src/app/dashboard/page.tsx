@@ -84,8 +84,9 @@ export default function UnifiedDashboard() {
                          </div>
                       </div>
                       <div className="text-right">
-                         <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Your Earnings</div>
+                         <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rental Earning</div>
                          <div className="text-3xl font-black text-green-500">₹{order.ownerEarning}</div>
+                         <div className="text-[10px] font-bold text-gray-400 mt-1">+ ₹{order.securityDeposit} Deposit</div>
                       </div>
                    </div>
                    

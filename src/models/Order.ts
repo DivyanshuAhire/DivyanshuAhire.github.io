@@ -9,6 +9,7 @@ export interface IOrder extends Document {
   totalPrice: number;
   platformFee: number;
   ownerEarning: number;
+  securityDeposit: number;
   status: "Pending" | "Accepted" | "Rejected" | "Ongoing" | "Delivered" | "Returned" | "Completed";
   paymentStatus: "Pending" | "Paid" | "Failed";
   deliveryType: "Pickup" | "Delivery";
@@ -26,6 +27,7 @@ const OrderSchema = new Schema<IOrder>(
     totalPrice: { type: Number, required: true },
     platformFee: { type: Number, required: true },
     ownerEarning: { type: Number, required: true },
+    securityDeposit: { type: Number, required: true },
     status: {
       type: String,
       enum: ["Pending", "Accepted", "Rejected", "Ongoing", "Delivered", "Returned", "Completed"],

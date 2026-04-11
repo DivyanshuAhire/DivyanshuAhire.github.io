@@ -49,9 +49,12 @@ export async function POST(req: NextRequest) {
     }
 
     const numberOfDays = requestedDates.length;
-    const totalPrice = (listing.pricePerDay * numberOfDays) + listing.deposit;
-    const platformFee = totalPrice * 0.15;
-    const ownerEarning = totalPrice - platformFee;
+    const baseRentalPrice = listing.pricePerDay * numberOfDays;
+    
+    const platformFee = Math.round(baseRentalPrice * 0.15);
+    const ownerEarning = baseRentalPrice - platformFee;
+    const totalPrice = baseRentalPrice + listing.deposit;
+    const securityDeposit = listing.deposit;
 
     const order = await Order.create({
       listingId,
@@ -62,6 +65,7 @@ export async function POST(req: NextRequest) {
       totalPrice,
       platformFee,
       ownerEarning,
+      securityDeposit,
       deliveryType: deliveryType || "Pickup",
       status: "Pending",
       paymentStatus: "Pending"
