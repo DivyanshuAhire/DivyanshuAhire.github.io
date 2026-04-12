@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
-    const userId = payload.id;
+    const userId = payload.id as string;
 
     const user = await User.findById(userId).select("-password");
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -32,7 +32,7 @@ export async function PUT(req: NextRequest) {
 
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
-    const userId = payload.id;
+    const userId = payload.id as string;
 
     const body = await req.json();
     const { name, phone, address } = body;

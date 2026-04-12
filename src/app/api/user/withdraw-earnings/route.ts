@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
-    const userId = payload.id;
+    const userId = payload.id as string;
 
     // Find all completed orders where earnings are "Available"
     const availableOrders = await Order.find({
