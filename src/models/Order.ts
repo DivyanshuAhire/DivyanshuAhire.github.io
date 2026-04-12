@@ -10,11 +10,13 @@ export interface IOrder extends Document {
   platformFee: number;
   ownerEarning: number;
   securityDeposit: number;
+  depositRefundStatus: "Pending" | "Available" | "Requested" | "Completed";
   status: "Pending" | "Accepted" | "Rejected" | "Ongoing" | "Delivered" | "Returned" | "Completed";
   paymentStatus: "Pending" | "Paid" | "Failed";
   deliveryType: "Pickup" | "Delivery";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
+  ownerEarningStatus: "Pending" | "Available" | "Requested" | "Completed";
 }
 
 const OrderSchema = new Schema<IOrder>(
@@ -28,6 +30,11 @@ const OrderSchema = new Schema<IOrder>(
     platformFee: { type: Number, required: true },
     ownerEarning: { type: Number, required: true },
     securityDeposit: { type: Number, required: true },
+    depositRefundStatus: {
+      type: String,
+      enum: ["Pending", "Available", "Requested", "Completed"],
+      default: "Pending",
+    },
     status: {
       type: String,
       enum: ["Pending", "Accepted", "Rejected", "Ongoing", "Delivered", "Returned", "Completed"],
@@ -45,6 +52,11 @@ const OrderSchema = new Schema<IOrder>(
     },
     razorpayOrderId: { type: String },
     razorpayPaymentId: { type: String },
+    ownerEarningStatus: {
+      type: String,
+      enum: ["Pending", "Available", "Requested", "Completed"],
+      default: "Pending",
+    },
   },
   { timestamps: true }
 );

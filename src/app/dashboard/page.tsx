@@ -64,12 +64,28 @@ export default function UnifiedDashboard() {
        toast.error("Failed to update status");
     }
   };
+ 
+  const handleWithdrawDeposit = async (orderId: string) => {
+     const res = await fetch("/api/user/withdraw-deposit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId })
+     });
+     if (res.ok) {
+        const data = await res.json();
+        toast.success(data.message);
+        fetchOrders();
+     } else {
+        const error = await res.json();
+        toast.error(error.error || "Withdrawal failed");
+     }
+  };
 
   if (loading || fetching) return <div className="text-center py-24 font-medium text-gray-500">Loading dashboard...</div>;
   if (!user || user.role !== "USER") return <div className="text-center py-24 font-bold text-red-500">Access Denied. User account required.</div>;
 
-  const myRentedClothes = orders.filter((o: any) => o.renterId?._id === user.id);
-  const incomingRequests = orders.filter((o: any) => o.ownerId === user.id);
+  const myRentedClothes = orders.filter((o: any) => o.renterId?._id?.toString() === user?.id?.toString());
+  const incomingRequests = orders.filter((o: any) => o.ownerId?._id?.toString() === user?.id?.toString());
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-16">
@@ -88,8 +104,9 @@ export default function UnifiedDashboard() {
  
        {/* SECTION: PUBLISHING HUB (Incoming Requests) */}
        <div>
-          <h2 className="text-2xl font-black text-gray-900 mb-6 border-l-4 border-indigo-600 pl-4">Incoming Booking Requests (Sales)</h2>
-          {incomingRequests.length === 0 ? (
+           <h2 className="text-2xl font-black text-gray-900 mb-8 border-l-4 border-indigo-600 pl-4">Incoming Booking Requests (Sales)</h2>
+
+           {incomingRequests.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 shadow-sm">
              <div className="text-gray-500 font-medium">No booking requests on your items yet. List more clothes!</div>
           </div>
@@ -105,16 +122,24 @@ export default function UnifiedDashboard() {
                          </div>
                       </div>
                       <div className="text-right">
-                         <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rental Earning</div>
-                         <div className="text-3xl font-black text-green-500">₹{order.ownerEarning}</div>
-                         <div className="text-[10px] font-bold text-gray-400 mt-1">+ ₹{order.securityDeposit} Deposit</div>
-                      </div>
+                          <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Rental Earning</div>
+                          <div className="text-3xl font-black text-green-500">₹{order.ownerEarning}</div>
+                          <div className={`text-[9px] font-black uppercase mt-1 px-2 py-0.5 rounded inline-block ${
+                             order.ownerEarningStatus === "Available" ? "bg-green-100 text-green-700" :
+                             order.ownerEarningStatus === "Requested" ? "bg-orange-100 text-orange-700" :
+                             order.ownerEarningStatus === "Completed" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-400"
+                          }`}>
+                             Payout: {order.ownerEarningStatus}
+                          </div>
+                       </div>
                    </div>
                    
                    <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-2xl mb-6 border border-gray-100 flex-grow">
                       <div className="text-sm font-bold text-gray-900 mb-2">Renter Details</div>
                       <div className="text-gray-700 font-medium mb-1">{order.renterId?.name}</div>
-                      <div className="text-gray-500 text-sm mb-3">Email: {order.renterId?.email}</div>
+                      <div className="text-gray-500 text-sm mb-1">Email: {order.renterId?.email}</div>
+                      <div className="text-gray-500 text-sm mb-1">Phone: {order.renterId?.phone || "Not provided"}</div>
+                      <div className="text-gray-500 text-xs mb-3 italic">Address: {order.renterId?.address || "Not provided"}</div>
                       <div className="inline-block bg-indigo-50 text-indigo-700 px-3 py-1 rounded-md text-xs font-bold border border-indigo-100">
                          Delivery: {order.deliveryType}
                       </div>
@@ -170,8 +195,17 @@ export default function UnifiedDashboard() {
                            {new Date(order.startDate).toLocaleDateString()} &mdash; {new Date(order.endDate).toLocaleDateString()}
                         </p>
                         {order.listingId?.location?.address && (order.paymentStatus === "Paid" || order.totalPrice === 0) && (
-                           <div className="text-xs bg-indigo-50 text-indigo-800 px-3 py-2 rounded-xl font-bold border border-indigo-100 flex items-center gap-2 mb-3 text-left">
-                             📍 Pickup/Mail: {order.listingId.location.address}
+                           <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-2 mb-3">
+                              <div className="text-xs text-indigo-800 font-bold flex items-center gap-2">
+                                📍 Pickup/Mail: {order.listingId.location.address}
+                              </div>
+                              <div className="h-px bg-indigo-100/50" />
+                              <div className="text-[11px] text-indigo-900 font-bold">Seller Contact Information:</div>
+                              <div className="text-[10px] text-indigo-700">
+                                 <div><span className="font-black">Name:</span> {order.ownerId?.name}</div>
+                                 <div><span className="font-black">Phone:</span> {order.ownerId?.phone || "Not provided"}</div>
+                                 <div className="mt-1"><span className="font-black">House Address:</span> {order.ownerId?.address || "Not provided"}</div>
+                              </div>
                            </div>
                         )}
                         <div className="flex justify-center md:justify-start gap-3">
@@ -182,6 +216,19 @@ export default function UnifiedDashboard() {
                      <div className="text-center md:text-right w-full md:w-auto mt-4 md:mt-0 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-2xl">
                         <div className="text-xs text-gray-500 font-black mb-1 uppercase tracking-widest">Total Paid</div>
                         <div className="text-2xl font-black text-purple-600">₹{order.totalPrice}</div>
+                        
+                        {/* Deposit Refund Logic */}
+                        <div className="mt-3">
+                           {order.depositRefundStatus === "Available" && (
+                              <Button onClick={() => handleWithdrawDeposit(order._id)} size="sm" className="bg-green-600 hover:bg-green-700 text-[10px] font-black h-8 rounded-lg shadow-sm">Get Deposit Back</Button>
+                           )}
+                           {order.depositRefundStatus === "Requested" && (
+                              <span className="text-[10px] font-black text-orange-600 uppercase bg-orange-50 px-2 py-1 rounded-md border border-orange-100">Withdrawal Processing</span>
+                           )}
+                           {order.depositRefundStatus === "Completed" && (
+                              <span className="text-[10px] font-black text-green-700 uppercase bg-green-50 px-2 py-1 rounded-md border border-green-100 italic">Deposit Refunded ✓</span>
+                           )}
+                        </div>
                      </div>
                    </div>
                 </Card>

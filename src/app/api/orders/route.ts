@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
 
     const orders = await Order.find(query)
       .populate("listingId", "title images location")
-      .populate("renterId", "name email phone")
+      .populate("ownerId", "name email phone address")
+      .populate("renterId", "name email phone address")
       .sort({ createdAt: -1 });
 
     return NextResponse.json(orders, { status: 200 });

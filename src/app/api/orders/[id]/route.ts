@@ -23,6 +23,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     await dbConnect();
     const resolvedParams = await params;
     const body = await req.json();
+    
+    // Auto-update deposit and earning status if order becomes "Completed"
+    if (body.status === "Completed") {
+      body.depositRefundStatus = "Available";
+      body.ownerEarningStatus = "Available";
+    }
+
     const order = await Order.findByIdAndUpdate(resolvedParams.id, body, { new: true });
     return NextResponse.json({ message: "Order updated", order }, { status: 200 });
   } catch (error: any) {

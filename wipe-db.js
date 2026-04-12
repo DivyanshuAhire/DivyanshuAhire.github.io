@@ -23,10 +23,6 @@ async function wipeDatabase() {
     const ordersCount = await Order.deleteMany({});
     console.log(`Deleted ${ordersCount.deletedCount} orders`);
 
-    // Delete all users except admin@stylep2p.com
-    const usersCount = await User.deleteMany({ email: { $ne: 'admin@stylep2p.com' } });
-    console.log(`Deleted ${usersCount.deletedCount} users (preserved admin@stylep2p.com)`);
-
     console.log('Database wipe complete.');
     process.exit(0);
   } catch (err) {

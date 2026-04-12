@@ -14,6 +14,7 @@ export function Navbar() {
         </Link>
         <div className="flex gap-4 items-center">
           <Link href="/"><Button variant="ghost">Browse</Button></Link>
+          {user && <Link href="/dashboard/profile"><Button variant="ghost">Profile</Button></Link>}
           {user ? (
              <>
                {user.role === "USER" && <Link href="/dashboard"><Button variant="ghost">Dashboard</Button></Link>}

@@ -68,7 +68,8 @@ export async function POST(req: NextRequest) {
       securityDeposit,
       deliveryType: deliveryType || "Pickup",
       status: "Pending",
-      paymentStatus: "Pending"
+      paymentStatus: "Pending",
+      ownerEarningStatus: "Pending"
     });
 
     return NextResponse.json({ message: "Booking initiated", order }, { status: 201 });
