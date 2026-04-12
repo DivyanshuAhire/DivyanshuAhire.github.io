@@ -11,6 +11,7 @@ export default function UnifiedDashboard() {
   const [orders, setOrders] = useState([]);
   const [myListings, setMyListings] = useState([]);
   const [fetching, setFetching] = useState(true);
+  const [otpInputs, setOtpInputs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (user && user.role === "USER") {
@@ -79,6 +80,34 @@ export default function UnifiedDashboard() {
         const error = await res.json();
         toast.error(error.error || "Withdrawal failed");
      }
+  };
+
+  const handleVerifyOTP = async (orderId: string, phase: 'pickup' | 'return') => {
+    const otp = otpInputs[orderId];
+    if (!otp || otp.length !== 6) {
+       toast.error("Please enter a valid 6-digit OTP");
+       return;
+    }
+
+    const res = await fetch(`/api/orders/${orderId}/verify-otp`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({ otp, phase })
+    });
+
+    if (res.ok) {
+       toast.success("Verification successful!");
+       fetchOrders();
+       // Clear the input
+       setOtpInputs(prev => {
+          const newState = { ...prev };
+          delete newState[orderId];
+          return newState;
+       });
+    } else {
+       const error = await res.json();
+       toast.error(error.error || "Verification failed");
+    }
   };
 
   if (loading || fetching) return <div className="text-center py-24 font-medium text-gray-500">Loading dashboard...</div>;
@@ -160,6 +189,43 @@ export default function UnifiedDashboard() {
                          {order.status === "Returned" && (
                             <Button onClick={() => handleUpdateStatus(order._id, 'Completed')} className="bg-green-600 hover:bg-green-700 rounded-xl h-11 text-sm font-bold shadow-md">Complete Order</Button>
                          )}
+
+                         {/* OTP VERIFICATION FOR SELLER (PICKUP) */}
+                         {order.paymentStatus === "Paid" && order.status === "Accepted" && (
+                            <div className="w-full mt-6 bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-100 flex flex-col md:flex-row items-center gap-4">
+                               <div className="flex-1 w-full">
+                                  <div className="text-xs font-black text-indigo-700 uppercase tracking-widest mb-1">Verify Pickup OTP</div>
+                                  <div className="text-[10px] text-indigo-500 font-medium mb-3">Ask the renter for the 6-digit code to release your earnings.</div>
+                                  <input 
+                                     type="text" 
+                                     placeholder="Ex: 123456" 
+                                     className="w-full h-11 px-4 rounded-xl border border-indigo-200 text-indigo-900 font-black tracking-widest focus:ring-2 focus:ring-indigo-500 outline-none"
+                                     value={otpInputs[order._id] || ""}
+                                     onChange={(e) => setOtpInputs({ ...otpInputs, [order._id]: e.target.value })}
+                                     maxLength={6}
+                                  />
+                               </div>
+                               <Button 
+                                  onClick={() => handleVerifyOTP(order._id, 'pickup')} 
+                                  className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 h-11 px-8 rounded-xl text-xs font-black shadow-lg shadow-indigo-200"
+                               >
+                                  Verify & Unlock Earnings
+                                </Button>
+                            </div>
+                         )}
+
+                         {/* OTP DISPLAY FOR SELLER (RETURN) */}
+                         {order.status === "Returned" && (
+                            <div className="w-full mt-6 bg-purple-50 p-6 rounded-[1.5rem] border border-purple-100 flex items-center justify-between">
+                               <div>
+                                  <div className="text-xs font-black text-purple-700 uppercase tracking-widest mb-1">Return Verification Code</div>
+                                  <div className="text-[10px] text-purple-500 font-medium">Give this code to the renter to complete the return.</div>
+                                </div>
+                                <div className="text-3xl font-black text-purple-700 tracking-[0.2em] bg-white px-6 py-2 rounded-xl border border-purple-200 shadow-sm">
+                                   {order.returnOTP}
+                                </div>
+                             </div>
+                          )}
                       </div>
                    </div>
                 </Card>
@@ -212,6 +278,46 @@ export default function UnifiedDashboard() {
                            <span className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-100">Status: {order.status}</span>
                            <span className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">Payment: {order.paymentStatus}</span>
                         </div>
+
+                        {/* OTP DISPLAY FOR RENTER (PICKUP) */}
+                        {order.paymentStatus === "Paid" && (order.status === "Accepted" || order.status === "Pending") && (
+                            <div className="mt-4 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                               <div>
+                                  <div className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Your Pickup OTP</div>
+                                  <div className="text-[9px] text-indigo-500 italic">Give this to the owner at pickup.</div>
+                               </div>
+                               <div className="text-2xl font-black text-indigo-700 tracking-widest bg-white px-4 py-1 rounded-xl border border-indigo-100 shadow-sm">
+                                  {order.pickupOTP}
+                               </div>
+                            </div>
+                        )}
+
+                        {/* OTP VERIFICATION FOR RENTER (RETURN) */}
+                        {order.status === "Returned" && (
+                            <div className="mt-4 bg-green-50 p-4 rounded-2xl border border-green-100 flex flex-col gap-3">
+                               <div className="flex items-center justify-between">
+                                  <div>
+                                     <div className="text-[10px] font-black text-green-700 uppercase tracking-widest">Verify Return OTP</div>
+                                     <div className="text-[9px] text-green-500 italic">Ask owner for code to get deposit back.</div>
+                                  </div>
+                                  <input 
+                                     type="text" 
+                                     placeholder="OTP" 
+                                     className="w-20 h-9 px-2 rounded-lg border border-green-200 text-green-900 font-bold text-center tracking-widest focus:ring-1 focus:ring-green-500 outline-none"
+                                     value={otpInputs[order._id] || ""}
+                                     onChange={(e) => setOtpInputs({ ...otpInputs, [order._id]: e.target.value })}
+                                     maxLength={6}
+                                  />
+                               </div>
+                               <Button 
+                                  size="sm"
+                                  onClick={() => handleVerifyOTP(order._id, 'return')} 
+                                  className="w-full bg-green-600 hover:bg-green-700 h-9 rounded-xl text-[10px] font-black shadow-sm"
+                                >
+                                  Verify & Get Deposit Back
+                                </Button>
+                            </div>
+                        )}
                      </div>
                      <div className="text-center md:text-right w-full md:w-auto mt-4 md:mt-0 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-2xl">
                         <div className="text-xs text-gray-500 font-black mb-1 uppercase tracking-widest">Total Paid</div>

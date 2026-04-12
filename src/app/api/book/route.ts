@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
     const totalPrice = baseRentalPrice + listing.deposit;
     const securityDeposit = listing.deposit;
 
+    const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
     const order = await Order.create({
       listingId,
       renterId,
@@ -69,7 +71,9 @@ export async function POST(req: NextRequest) {
       deliveryType: deliveryType || "Pickup",
       status: "Pending",
       paymentStatus: "Pending",
-      ownerEarningStatus: "Pending"
+      ownerEarningStatus: "Pending",
+      pickupOTP: generateOTP(),
+      returnOTP: generateOTP()
     });
 
     return NextResponse.json({ message: "Booking initiated", order }, { status: 201 });

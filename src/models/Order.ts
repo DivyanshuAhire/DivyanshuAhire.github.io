@@ -17,6 +17,10 @@ export interface IOrder extends Document {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   ownerEarningStatus: "Pending" | "Available" | "Requested" | "Completed";
+  pickupOTP?: string;
+  returnOTP?: string;
+  pickupVerified: boolean;
+  returnVerified: boolean;
 }
 
 const OrderSchema = new Schema<IOrder>(
@@ -57,6 +61,10 @@ const OrderSchema = new Schema<IOrder>(
       enum: ["Pending", "Available", "Requested", "Completed"],
       default: "Pending",
     },
+    pickupOTP: { type: String },
+    returnOTP: { type: String },
+    pickupVerified: { type: Boolean, default: false },
+    returnVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
