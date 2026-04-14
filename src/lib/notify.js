@@ -12,7 +12,7 @@ async function sendOrderNotification({ to, subject, text }) {
     auth: { user, pass },
   });
   const mailOptions = {
-    from: `StyleP2P <${user}>`,
+    from: `RentalPay <${user}>`,
     to,
     subject,
     text,
