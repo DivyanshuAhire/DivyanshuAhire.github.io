@@ -7,21 +7,13 @@ async function wipeDatabase() {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Define models for wiping
-    const UserSchema = new mongoose.Schema({}, { strict: false, collection: 'users' });
-    const ListingSchema = new mongoose.Schema({}, { strict: false, collection: 'listings' });
-    const OrderSchema = new mongoose.Schema({}, { strict: false, collection: 'orders' });
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collectionNames = collections.map(c => c.name);
 
-    const User = mongoose.models.User || mongoose.model('User', UserSchema);
-    const Listing = mongoose.models.Listing || mongoose.model('Listing', ListingSchema);
-    const Order = mongoose.models.Order || mongoose.model('Order', OrderSchema);
-
-    // Delete all listings and orders
-    const listingsCount = await Listing.deleteMany({});
-    console.log(`Deleted ${listingsCount.deletedCount} listings`);
-
-    const ordersCount = await Order.deleteMany({});
-    console.log(`Deleted ${ordersCount.deletedCount} orders`);
+    for (const name of collectionNames) {
+      console.log(`Clearing collection: ${name}`);
+      await mongoose.connection.db.collection(name).deleteMany({});
+    }
 
     console.log('Database wipe complete.');
     process.exit(0);
@@ -32,3 +24,4 @@ async function wipeDatabase() {
 }
 
 wipeDatabase();
+

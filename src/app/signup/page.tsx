@@ -11,28 +11,71 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Signup() {
+  const [step, setStep] = useState(1); // 1: Phone, 2: OTP, 3: Details
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      if (res.ok) {
+        toast.success("OTP sent to WhatsApp!");
+        setStep(2);
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to send OTP");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code: otp }),
+      });
+      if (res.ok) {
+        toast.success("Phone verified!");
+        setStep(3);
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Invalid OTP");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinalSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, phone, password }),
       });
       const data = await res.json();
       if (res.ok) {
         login(data.user);
         toast.success("Successfully registered");
-        if (data.user.role === "ADMIN") router.push("/dashboard/admin");
-        else router.push("/dashboard");
+        router.push("/dashboard");
       } else {
         toast.error(data.error || "Failed to register");
       }
@@ -51,26 +94,50 @@ export default function Signup() {
           <CardDescription className="text-center text-md">Join StyleP2P and start renting</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} className="h-12" placeholder="John Doe" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" placeholder="name@example.com" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-12" />
-            </div>
-            <Button type="submit" className="w-full h-12 text-md mt-4 bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
-                 {loading ? "Loading..." : "Create Account"}
-            </Button>
-            <div className="text-center text-sm text-gray-500 mt-4">
-              Already have an account? <Link href="/login" className="text-indigo-600 font-semibold hover:underline">Log in</Link>
-            </div>
-          </form>
+          {step === 1 && (
+             <form onSubmit={handleSendOTP} className="space-y-4">
+                <div className="space-y-2">
+                   <Label htmlFor="phone">Phone Number (WhatsApp)</Label>
+                   <Input id="phone" required value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12" placeholder="+91 XXXXX XXXXX" />
+                </div>
+                <Button type="submit" className="w-full h-12 text-md mt-4 bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                     {loading ? "Sending..." : "Get OTP via WhatsApp"}
+                </Button>
+             </form>
+          )}
+
+          {step === 2 && (
+             <form onSubmit={handleVerifyOTP} className="space-y-4">
+                <div className="space-y-2">
+                   <Label htmlFor="otp">Enter 6-Digit OTP</Label>
+                   <Input id="otp" required value={otp} onChange={(e) => setOtp(e.target.value)} className="h-12 text-center tracking-widest text-lg font-bold" placeholder="123456" maxLength={6} />
+                </div>
+                <Button type="submit" className="w-full h-12 text-md mt-4 bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                     {loading ? "Verifying..." : "Verify OTP"}
+                </Button>
+                <button type="button" onClick={() => setStep(1)} className="text-indigo-600 text-sm w-full font-medium">Change Phone Number</button>
+             </form>
+          )}
+
+          {step === 3 && (
+             <form onSubmit={handleFinalSignup} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} className="h-12" placeholder="John Doe" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Create Password</Label>
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="h-12" />
+                </div>
+                <Button type="submit" className="w-full h-12 text-md mt-4 bg-indigo-600 hover:bg-indigo-700" disabled={loading}>
+                     {loading ? "Creating Account..." : "Complete Registration"}
+                </Button>
+             </form>
+          )}
+
+          <div className="text-center text-sm text-gray-500 mt-6">
+            Already have an account? <Link href="/login" className="text-indigo-600 font-semibold hover:underline">Log in</Link>
+          </div>
         </CardContent>
       </Card>
     </div>

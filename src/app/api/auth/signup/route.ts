@@ -8,15 +8,15 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { name, email, password, phone, address } = body;
+    const { name, phone, password, address, email } = body;
 
-    if (!name || !email || !password) {
+    if (!name || !phone || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ phone });
     if (existingUser) {
-      return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+      return NextResponse.json({ error: "Phone number already registered" }, { status: 400 });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -24,17 +24,17 @@ export async function POST(req: Request) {
 
     const user = await User.create({
       name,
-      email,
+      phone,
       password: hashedPassword,
       role: "USER",
-      phone,
+      email,
       address,
     });
 
-    const token = signToken({ id: user._id, role: user.role, email: user.email });
+    const token = signToken({ id: user._id, role: user.role, phone: user.phone });
 
     const response = NextResponse.json(
-      { message: "Registration successful", user: { id: user._id, email: user.email, role: user.role, name: user.name } },
+      { message: "Registration successful", user: { id: user._id, phone: user.phone, role: user.role, name: user.name } },
       { status: 201 }
     );
     

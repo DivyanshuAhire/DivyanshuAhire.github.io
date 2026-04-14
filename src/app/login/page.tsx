@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function Login() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ phone, password }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -51,8 +51,8 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-12" placeholder="name@example.com" />
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input id="phone" required value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12" placeholder="+91 XXXXX XXXXX" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

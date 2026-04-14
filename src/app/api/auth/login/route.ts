@@ -8,21 +8,21 @@ export async function POST(req: Request) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { email, password } = body;
+    const { phone, password } = body;
 
-    if (!email || !password) {
+    if (!phone || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
     if (!user || user.password && !(await bcrypt.compare(password, user.password))) {
-       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+       return NextResponse.json({ error: "Invalid phone number or password" }, { status: 401 });
     }
 
-    const token = signToken({ id: user._id, role: user.role, email: user.email });
+    const token = signToken({ id: user._id, role: user.role, phone: user.phone });
 
     const response = NextResponse.json(
-      { message: "Login successful", user: { id: user._id, email: user.email, role: user.role, name: user.name } },
+      { message: "Login successful", user: { id: user._id, phone: user.phone, role: user.role, name: user.name } },
       { status: 200 }
     );
     
