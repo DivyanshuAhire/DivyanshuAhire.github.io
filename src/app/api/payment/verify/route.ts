@@ -47,18 +47,36 @@ export async function POST(req: Request) {
              User.findById(order.renterId),
              User.findById(order.ownerId)
            ]);
+           // Fetch listing for details
+           const listingObj = listing || (order.listingId ? await Listing.findById(order.listingId) : null);
+           const start = order.startDate ? new Date(order.startDate) : null;
+           const end = order.endDate ? new Date(order.endDate) : null;
+           const days = (start && end) ? (Math.abs(Math.floor((end.getTime() - start.getTime()) / (1000 * 3600 * 24))) + 1) : null;
+           // Buyer notification: OTP and summary
            if (buyer?.email) {
              sendOrderNotification({
                to: buyer.email,
-               subject: "Order Confirmed!",
-               text: `Your payment for order ${order._id} was successful. The owner will be notified.`,
+               subject: "Order Confirmed! Your OTP and Details",
+               text:
+                 `Your payment for order ${order._id} was successful.\n` +
+                 `\nOrder summary:` +
+                 (listingObj ? `\nItem: ${listingObj.title}` : "") +
+                 (days ? `\nRental period: ${start?.toLocaleDateString()} to ${end?.toLocaleDateString()} (${days} days)` : "") +
+                 `\nTotal paid: ₹${order.totalPrice}` +
+                 (order.pickupOTP ? `\n\nYour pickup OTP (give this to the seller): ${order.pickupOTP}` : "") +
+                 `\n\nThe owner will be notified.`,
              });
            }
+           // Seller notification: rental details
            if (seller?.email) {
              sendOrderNotification({
                to: seller.email,
                subject: "New Order Received!",
-               text: `You have received a new order (ID: ${order._id}). Please check your dashboard for details.`,
+               text:
+                 `You have received a new order (ID: ${order._id}).` +
+                 (listingObj ? `\nItem: ${listingObj.title}` : "") +
+                 (days ? `\nRental period: ${start?.toLocaleDateString()} to ${end?.toLocaleDateString()} (${days} days)` : "") +
+                 `\n\nCheck your dashboard for full details.`,
              });
            }
        }
