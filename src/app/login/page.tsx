@@ -50,6 +50,7 @@ export default function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="text-red-600 text-xs font-semibold mb-2">Do not use phone number right now. Use email only. Phone verification is under development.</div>
             <div className="space-y-2">
               <Label htmlFor="identifier">Email, Phone, or Username</Label>
               <Input id="identifier" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="h-12" placeholder="Email, phone, or username" />

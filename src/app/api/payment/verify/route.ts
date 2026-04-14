@@ -3,6 +3,8 @@ import crypto from "crypto";
 import dbConnect from "@/lib/db";
 import { Order } from "@/models/Order";
 import { Listing } from "@/models/Listing";
+import { User } from "@/models/User";
+const { sendOrderNotification } = require("@/lib/notify.js");
 
 export async function POST(req: Request) {
   try {
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
            order.status = "Accepted";
            order.razorpayPaymentId = razorpay_payment_id || "mock_pay_id";
            await order.save();
-           
+
            const listing = await Listing.findById(order.listingId);
            if (listing) {
                let currentDate = new Date(order.startDate);
@@ -38,6 +40,26 @@ export async function POST(req: Request) {
                  currentDate.setDate(currentDate.getDate() + 1);
                }
                await listing.save();
+           }
+
+           // Notify buyer and seller
+           const [buyer, seller] = await Promise.all([
+             User.findById(order.renterId),
+             User.findById(order.ownerId)
+           ]);
+           if (buyer?.email) {
+             sendOrderNotification({
+               to: buyer.email,
+               subject: "Order Confirmed!",
+               text: `Your payment for order ${order._id} was successful. The owner will be notified.`,
+             });
+           }
+           if (seller?.email) {
+             sendOrderNotification({
+               to: seller.email,
+               subject: "New Order Received!",
+               text: `You have received a new order (ID: ${order._id}). Please check your dashboard for details.`,
+             });
            }
        }
        return NextResponse.json({ message: "Mock Payment verified successfully" }, { status: 200 });
@@ -51,7 +73,7 @@ export async function POST(req: Request) {
            order.status = "Accepted";
            order.razorpayPaymentId = razorpay_payment_id;
            await order.save();
-           
+
            // Lock the dates on the Listing
            const listing = await Listing.findById(order.listingId);
            if (listing) {
@@ -62,6 +84,26 @@ export async function POST(req: Request) {
                  currentDate.setDate(currentDate.getDate() + 1);
                }
                await listing.save();
+           }
+
+           // Notify buyer and seller
+           const [buyer, seller] = await Promise.all([
+             User.findById(order.renterId),
+             User.findById(order.ownerId)
+           ]);
+           if (buyer?.email) {
+             sendOrderNotification({
+               to: buyer.email,
+               subject: "Order Confirmed!",
+               text: `Your payment for order ${order._id} was successful. The owner will be notified.`,
+             });
+           }
+           if (seller?.email) {
+             sendOrderNotification({
+               to: seller.email,
+               subject: "New Order Received!",
+               text: `You have received a new order (ID: ${order._id}). Please check your dashboard for details.`,
+             });
            }
        }
        return NextResponse.json({ message: "Payment verified successfully" }, { status: 200 });
